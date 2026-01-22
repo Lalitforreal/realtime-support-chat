@@ -3,10 +3,9 @@ const app = express();
 const path = require('path');
 const cookieParser = require('cookie-parser');
 
-require("dotenv").config(); 
+require("dotenv"); 
 
-const connectdb = require('./config/mongoose-connection');
-connectdb();
+const db = require('./config/mongoose-connection');
 const indexRouter = require('./routes/indexRouter');
 const customerRouter = require('./routes/customerRouter');
 const agentRouter = require('./routes/agentRouter');
@@ -17,7 +16,7 @@ app.set("view engine","ejs");
 
 app.use('/',indexRouter);
 // app.use('/customer',customerRouter);
-// app.use('/agent',agentRouter);
+app.use('/agent',agentRouter);
 
 app.listen(3000,()=>{
     console.log("Server running at localhost:3000");
