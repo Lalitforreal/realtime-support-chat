@@ -5,7 +5,7 @@ const crypto = require('crypto'); // forgot password usage
 const agentModel = require('../models/agent');
 const { generateToken } = require("../utils/generateToken");
 
-const  requireAgent = require('../middlewares/requireAgent');
+const {requireAgent} = require('../middlewares/requireAgent');
 
 
 router.get('/login',function(req,res){
