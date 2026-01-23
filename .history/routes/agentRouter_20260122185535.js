@@ -62,8 +62,7 @@ router.post("/login",async function(req,res){
             res.cookie("aid",token,{
                 httpOnly : true, //protects from token chori by XSS
                 sameSite : "lax", //allows redirect to keep cookei
-                secure : false,  //F in localhost T in production
-                maxAge: 24 * 60 * 60 * 1000
+                secure : false, //F in localhost T in production
             });
             return res.redirect('/agent/dashboard');
 

@@ -31,7 +31,7 @@ router.post("/register",function(req,res){
                 //use JWT to generate a token in the utils
                 let token = generateToken(newAgent);
                 res.cookie("aid", token);
-                res.redirect('/agent/dashboard');
+                // res.redirect('/agent/dashboard');
                 console.log("Agent Registered");
             }catch(err){
                 console.log(err);
@@ -51,23 +51,23 @@ router.post("/login",async function(req,res){
             console.log("Invalid credentials");
             return res.redirect('/agent/login');
         }
-        let isMatch = await bcrypt.compare(req.body.password, agent.passwordHash);
-
+        let isMatch = false;
+        if(password === agent.password){
+            isMatch = true;
+        }
         console.log("login by", {email, isMatch});
         if(isMatch){
+            // return res.redirect('/agent/dashboard');
             console.log("agent logged in");
             //generate token
             const token = generateToken(agent);
-            console.log(token);
-            res.cookie("aid",token,{
+            res.cookie("loginaid",token,{
                 httpOnly : true, //protects from token chori by XSS
                 sameSite : "lax", //allows redirect to keep cookei
-                secure : false,  //F in localhost T in production
-                maxAge: 24 * 60 * 60 * 1000
+                secure : false, //F in localhost T in production
             });
-            return res.redirect('/agent/dashboard');
 
-            return res.json({success:true})
+            console.log(token);
             // return res.redirect("agent/dashboard");
         }else{
             console.log("Invalid credentials");
@@ -75,14 +75,10 @@ router.post("/login",async function(req,res){
         }
 
     }catch(err){
-        return res.redirect("/agent/login");
+
     }
 
 })
 
-
-router.get('/dashboard',function(req,res){
-    res.send("done hai laadle");
-})
 
 module.exports = router;

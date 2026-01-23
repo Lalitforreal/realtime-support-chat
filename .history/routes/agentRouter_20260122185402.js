@@ -55,6 +55,7 @@ router.post("/login",async function(req,res){
 
         console.log("login by", {email, isMatch});
         if(isMatch){
+            // return res.redirect('/agent/dashboard');
             console.log("agent logged in");
             //generate token
             const token = generateToken(agent);
@@ -62,10 +63,8 @@ router.post("/login",async function(req,res){
             res.cookie("aid",token,{
                 httpOnly : true, //protects from token chori by XSS
                 sameSite : "lax", //allows redirect to keep cookei
-                secure : false,  //F in localhost T in production
-                maxAge: 24 * 60 * 60 * 1000
+                secure : false, //F in localhost T in production
             });
-            return res.redirect('/agent/dashboard');
 
             return res.json({success:true})
             // return res.redirect("agent/dashboard");
@@ -75,7 +74,7 @@ router.post("/login",async function(req,res){
         }
 
     }catch(err){
-        return res.redirect("/agent/login");
+
     }
 
 })

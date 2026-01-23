@@ -11,7 +11,7 @@ const customerRouter = require('./routes/customerRouter');
 const agentRouter = require('./routes/agentRouter');
 
 app.use(express.urlencoded({extended : true}));
-app.use(express.json());
+app.use(express.json());ˀ
 app.use(express.static(path.join(__dirname,"public")));
 app.set("view engine","ejs");
 app.use(cookieParser());
