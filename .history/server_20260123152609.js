@@ -28,7 +28,7 @@ app.set("view engine","ejs");
 app.use(cookieParser());
 
 app.use('/',indexRouter);
-app.use('/customer',customerRouter);
+// app.use('/customer',customerRouter);
 app.use('/agent',agentRouter);
 
 connectdb();
@@ -41,8 +41,6 @@ io.use(socketAuth);
 //register socket event handler 
 registerSockets(io);
 
-
-//for socket server
 server.listen(3000,()=>{
     console.log("Server running at localhost:3000");
 })

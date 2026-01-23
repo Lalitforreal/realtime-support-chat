@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raise a Ticket</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="font-'helvetica_now_display' border-box m-0 p-0">
+
+    <div class="w-full h-screen flex px-20">
+        <div class="w-1/2 flex items-center justify-center h-screen">
+            <div class="w-full px-32">
+                <h4 class="text-2xl capitalize">raise a support ticket</h4>
+                <p class="text-sm text-zinc-500 mb-2">Tell us the issue and we’ll connect you to an agent.</p>
+
+                <form autocomplete="off" action="/customer/ticket" method="post">
+                    <input
+                        class="block bg-zinc-100 w-full px-3 py-2 border-[1px] rounded-md mb-3 border-zinc-200"
+                        type="text" placeholder="Name" name="name" required>
+
+                    <input
+                        class="block bg-zinc-100 w-full px-3 py-2 border-[1px] rounded-md mb-3 border-zinc-200"
+                        type="email" placeholder="Email" name="email" required>
+
+                    <textarea
+                        class="block bg-zinc-100 w-full px-3 py-2 border-[1px] rounded-md mb-3 border-zinc-200 resize-none"
+                        rows="4"
+                        placeholder="Describe your issue..."
+                        name="issue"
+                        required></textarea>
+
+                    <input
+                        class="px-5 block rounded-full py-3 mt-2 bg-blue-500 text-white cursor-pointer"
+                        type="submit"
+                        value="Raise Ticket">
+                </form>
+
+                <div class="mt-4 text-sm text-zinc-500">
+                    Already have a ticket?
+                    <a class="text-blue-500" href="/customer">Go to chat</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

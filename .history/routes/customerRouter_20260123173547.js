@@ -12,7 +12,7 @@ router.get('/new',async function(req,res){
         status : 'open'
     });
     if(openTicket){
-        return res.redirect(`/customer/ticket/${openTicket._id}`);
+        return res.send("Ticket exists, welcome to chat");
     }
     res.render("customer");
 })
@@ -27,7 +27,7 @@ router.post("/ticket",ensureGuest,async function(req,res){
         issue
     });
     // return res.send("created ticket");
-    return res.redirect(`/customer/ticket/${ticket._id}`); //mongo gives direclty
+    return res.redirect(`/ticket/${ticket._id}`); //mongo gives direclty
 });
 
 router.get('/ticket/:ticketId', async function(req,res){
@@ -38,11 +38,11 @@ router.get('/ticket/:ticketId', async function(req,res){
     }
 
     //ownership security 
-    if(ticket.guestId !== req.cookies.guestId){
+    if(ticket.guestId !== req.params.guestId){
         return res.status(403).send("Not allowed");
     }
-    // res.send("chat khulgayiii");
-    res.render("chat",{ticket});
+    res.send("caht khulgayiii");
+    // res.render("chat")
 })
 
 module.exports = router;

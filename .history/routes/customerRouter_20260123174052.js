@@ -12,7 +12,7 @@ router.get('/new',async function(req,res){
         status : 'open'
     });
     if(openTicket){
-        return res.redirect(`/customer/ticket/${openTicket._id}`);
+        return res.send("Ticket exists, welcome to chat");
     }
     res.render("customer");
 })
@@ -41,8 +41,8 @@ router.get('/ticket/:ticketId', async function(req,res){
     if(ticket.guestId !== req.cookies.guestId){
         return res.status(403).send("Not allowed");
     }
-    // res.send("chat khulgayiii");
-    res.render("chat",{ticket});
+    res.send("caht khulgayiii");
+    // res.render("chat")
 })
 
 module.exports = router;

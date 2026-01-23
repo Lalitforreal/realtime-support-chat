@@ -12,7 +12,7 @@ router.get('/new',async function(req,res){
         status : 'open'
     });
     if(openTicket){
-        return res.redirect(`/customer/ticket/${openTicket._id}`);
+        return res.send("Ticket exists, welcome to chat");
     }
     res.render("customer");
 })
@@ -26,23 +26,10 @@ router.post("/ticket",ensureGuest,async function(req,res){
         email,
         issue
     });
-    // return res.send("created ticket");
-    return res.redirect(`/customer/ticket/${ticket._id}`); //mongo gives direclty
+    return res.send("created ticket");
 });
 
-router.get('/ticket/:ticketId', async function(req,res){
-    console.log(req.params.ticketId);
-    const ticket = await ticketModel.findById(req.params.ticketId);
-    if(!ticket){
-        return res.status(400).send("Ticket not found");
-    }
+//waht if already have a ticket
 
-    //ownership security 
-    if(ticket.guestId !== req.cookies.guestId){
-        return res.status(403).send("Not allowed");
-    }
-    // res.send("chat khulgayiii");
-    res.render("chat",{ticket});
-})
 
 module.exports = router;

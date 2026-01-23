@@ -12,7 +12,7 @@ router.get('/new',async function(req,res){
         status : 'open'
     });
     if(openTicket){
-        return res.redirect(`/customer/ticket/${openTicket._id}`);
+        return res.redirect(`/customer/ticket/${ticket._id}`);
     }
     res.render("customer");
 })
