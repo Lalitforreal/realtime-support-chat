@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Chat</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="font-'helvetica_now_display' m-0 p-0">
+
+    <div class="w-full h-screen flex items-center justify-center px-10">
+
+        <div class="w-full max-w-3xl">
+
+            <!-- HEADER -->
+            <div  class="flex items-center justify-between mb-4">
+                <div>
+                    <h4 class="text-2xl">Agent Chat</h4>
+                    <p class="text-sm text-zinc-500">
+                        Customer: <span class="text-zinc-800"><%= ticket.customerName %></span>
+                    </p>
+                    <p class="text-xs text-zinc-400">
+                        Ticket ID: <%= ticket._id %>
+                    </p>
+                </div>
+
+                <button
+                id="closeTicketBtn"
+                style="position: relative; z-index: 9999;"
+                class="relative z-[9999] pointer-events-auto px-4 py-2 rounded-full bg-red-500 text-white text-sm hover:bg-red-600"
+                >
+                Close Ticket
+                </button>
+            </div>
+            <% if (isClosed) { %>
+                <div class="mb-3 px-4 py-2 rounded-md bg-red-100 text-red-700 text-sm text-center">
+                    This ticket has been closed.
+                </div>
+            <% } %>
+
+            <!-- CHAT CONTAINER -->
+            <div class="bg-zinc-100 border border-zinc-200 rounded-xl p-5 h-[75vh] flex flex-col">
+
+                <!-- MESSAGES -->
+                <div id="messages" class="flex flex-col flex-1 overflow-y-auto space-y-2 pr-2">
+
+                    <% if (messages.length === 0) { %>
+                        <div class="text-sm text-zinc-500 text-center mt-5">
+                            No messages yet.
+                        </div>
+                    <% } %>
+
+                <% messages.forEach(message => { %>
+                    <% if (message.senderRole === currentRole) { %>
+                        <!-- AGENT → RIGHT -->
+                        <div class="text-sm bg-blue-500 text-white px-3 py-2 rounded-lg w-fit self-end">
+                            <%= message.content %>
+                        </div>
+                    <% } else { %>
+                        <!-- CUSTOMER → LEFT -->
+                        <div class="text-sm bg-white text-zinc-800 px-3 py-2 rounded-lg w-fit">
+                            <%= message.content %>
+                        </div>
+                    <% } %>
+                <% }) %>
+
+                </div>
+
+                <!-- INPUT -->
+                <form id="chatForm" class="mt-4 flex gap-2">
+                    <input
+                        id="msgInput"
+                        class="flex-1 bg-white px-3 py-3 border rounded-md border-zinc-200"
+                        type="text"
+                        placeholder="Reply to customer..."
+                        autocomplete="off"
+                    />
+                    <button
+                        type="submit"
+                        class="px-8 py-3 rounded-full bg-blue-500 text-white"
+                    >
+                        Send
+                    </button>
+                </form>
+
+            </div>
+
+            <div class="mt-4 text-sm text-zinc-500">
+                <a href="/agent/dashboard" class="text-blue-500">
+                    Back to dashboard
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SOCKET CLIENT -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    
+    document.addEventListener("DOMContentLoaded",()=>{
+
+        const ticketId = "<%= ticket._id %>";
+        
+        const messagesDiv = document.getElementById("messages");
+        const chatForm = document.getElementById("chatForm");
+        const msgInput = document.getElementById("msgInput");
+        const closeBtn = document.getElementById("closeTicketBtn");
+        
+        function addMessage(text, type = "agent") {
+            const div = document.createElement("div");
+            
+            if (type === "agent") {
+                // AGENT → RIGHT
+                div.className =
+                "text-sm bg-blue-500 text-white px-3 py-2 rounded-lg w-fit self-end";
+            } else {
+                // CUSTOMER → LEFT
+                div.className =
+                "text-sm bg-white text-zinc-800 px-3 py-2 rounded-lg w-fit";
+            }
+            
+            div.innerText = text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        const socket = io();
+        
+        socket.on("connect", () => {
+            socket.emit("ticket:join", { ticketId });
+        });
+        
+        socket.on("chat:message", (data) => {
+            if (data.ticketId !== ticketId) return;
+            
+            addMessage(
+                data.msg,
+                data.senderRole === "agent" ? "agent" : "guest"
+            );
+        });
+        
+        socket.on("ticket:closed", () => {
+            addSystemMessage("This ticket has been closed.");
+            msgInput.disabled = true;
+            msgInput.placeholder = "Ticket closed";
+        });
+        
+        chatForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            
+            const msg = msgInput.value.trim();
+            if (!msg) return;
+            
+            socket.emit("chat:message", { ticketId, msg });
+            msgInput.value = "";
+        });
+        
+        console.log("closeBtn:", closeBtn);
+        
+        closeBtn.addEventListener("click", () => {
+            console.log("clicked");
+            if (!confirm("Are you sure you want to close this ticket?")) return;
+            socket.emit("ticket:close", { ticketId });
+        });
+
+        function addSystemMessage(text) {
+            const div = document.createElement("div");
+            div.className = "text-xs text-zinc-500 text-center my-3";
+            div.innerText = text;
+            messagesDiv.appendChild(div);
+        }
+    });
+</script>
+        
+        </body>
+        </html>

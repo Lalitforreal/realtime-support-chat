@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Support Chat</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<!-- Replace your <body> opening tag with this -->
+<body class="font-'helvetica_now_display' border-box m-0 p-0">
+
+    <!-- FULL SCREEN + CENTER -->
+    <div class="w-full h-screen flex items-center justify-center px-10">
+
+        <!-- MAIN CHAT WRAPPER (wide) -->
+        <div class="w-full max-w-3xl">
+
+            <h4 class="text-2xl capitalize mb-1">support chat</h4>
+            <p class="text-sm text-zinc-500 mb-4">
+                Ticket ID: <span class="text-zinc-800"><%= ticket._id %></span>
+            </p>
+
+            <!-- CHAT BOX BIGGER -->
+            <div class="bg-zinc-100 border border-zinc-200 rounded-xl p-5 h-[75vh] flex flex-col">
+
+                <!-- MESSAGES -->
+                <div id="messages" class="flex flex-col flex-1 overflow-y-auto space-y-2 pr-2">
+
+                    <% if (messages.length === 0) { %>
+                        <div class="text-sm text-zinc-500 text-center mt-5">
+                            No messages yet.
+                        </div>
+                    <% } %>
+
+                <% messages.forEach(message => { %>
+                    <% if (message.senderRole === "agent") { %>
+                        <!-- AGENT → RIGHT -->
+                        <div class="text-sm bg-blue-500 text-white px-3 py-2 rounded-lg w-fit self-end">
+                            <%= message.content %>
+                        </div>
+                    <% } else { %>
+                        <!-- CUSTOMER → LEFT -->
+                        <div class="text-sm bg-white text-zinc-800 px-3 py-2 rounded-lg w-fit">
+                            <%= message.content %>
+                        </div>
+                    <% } %>
+                <% }) %>
+
+                </div>
+
+                <form id="chatForm"  class="mt-4 flex gap-2">
+                    <input
+                        id="msgInput"
+                        class="flex-1 bg-white px-3 py-3 border-[1px] rounded-md border-zinc-200"
+                        type="text"
+                        placeholder="Type your message..."
+                        autocomplete="off"
+                    />
+
+                    <button
+                        type="submit"
+                        class="px-8 rounded-full py-3 bg-blue-500 text-white"
+                    >
+                        Send
+                    </button>
+                </form>
+
+            </div>
+
+            <div class="mt-4 text-sm text-zinc-500">
+                Need to raise a new ticket?
+                <a class="text-blue-500" href="/customer/new">Create ticket</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const ticketId = "<%= ticket._id %>";
+        console.log(ticketId);
+
+        const messagesDiv = document.getElementById("messages");
+        const chatForm = document.getElementById("chatForm");
+        const msgInput = document.getElementById("msgInput");
+
+        function addMessage(text, type = "system") {
+            const div = document.createElement("div");
+
+            if (type === "me") {
+                div.className = "text-sm bg-blue-500 text-white px-3 py-2 rounded-lg w-fit ml-auto";
+            } else if (type === "agent") {
+                div.className = "text-sm bg-white text-zinc-800 px-3 py-2 rounded-lg w-fit";
+            } else {
+                div.className = "text-xs text-zinc-500 text-center";
+            }
+
+            div.innerText = text;
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        const socket = io();
+        socket.emit("ticket:join",{ticketId : ticketId});
+
+        socket.on("chat:message",(data)=>{
+            if(data.ticketId !== ticketId)return;
+
+            addMessage(data.msg, data.senderRole=== "guest" ? "me" : "agent");
+        })
+        chatForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const msg = msgInput.value.trim();
+            if (!msg) return;
+
+            socket.emit("chat:message",{ticketId,msg});
+            msgInput.value = "";
+        });
+    </script>
+
+</body>
+</html>

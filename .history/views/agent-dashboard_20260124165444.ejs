@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Agent Dashboard</title>
+</head>
+<body>
+
+<h2>Open Tickets</h2>
+
+<ul>
+  <% tickets.forEach(ticket => { %>
+    <li>
+      <strong><%= ticket.customerName %></strong>
+      <br />
+      <small><%= ticket.issue %></small>
+      <br />
+      <a href="/agent/ticket/<%= ticket._id %>">Join Chat</a>
+    </li>
+  <% }) %>
+</ul>
+
+</body>
+</html>
