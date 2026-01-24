@@ -44,9 +44,7 @@ router.get('/ticket/:ticketId', async function(req,res){
     }
     // res.send("chat khulgayiii");
     //render old messages
-    const message = await messageModel.findOne({
-        ticketId : req.params.ticketId
-    })
+
     res.render("chat",{ticket});
 })
 
