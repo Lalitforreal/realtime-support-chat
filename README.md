@@ -1,175 +1,132 @@
-# Real-Time Support Chat (HTTP + Socket.IO Auth)
+Real-Time Support Chat (HTTP + Socket.IO Authentication)
 
-A support chat system built with:
-- HTTP authentication for agents
-- Socket.IO authentication middleware (cookie/JWT)
-- Role-based authorization inside socket events
-- Ticket rooms (one room per ticket)
-- Guest customer flow (no login)
+A production-style real-time customer support chat system built using Express, Socket.IO, and JWT-based authentication, supporting both guest users and authenticated agents with strict role-based authorization.
 
+This project demonstrates how to combine HTTP authentication with persistent Socket.IO sessions, handle real-time messaging, ticket-based chat rooms, and cursor-based message pagination in a scalable way.
 
-## Features
+⸻
 
-### Customer (Guest)
-- Create support ticket
-- Auto-join ticket room
-- Send/receive chat messages in real time
-- Ticket tied to guest identity (guestId)
+Overview
 
-### Agent (Login Required)
-- Login using HTTP route
-- JWT stored in cookie
-- Socket authenticates from cookie automatically
-- View ticket list
-- Join ticket room
-- Reply and close ticket
+The system allows customers (guests) to create support tickets without logging in and communicate with agents in real time. Agents authenticate via HTTP, receive a JWT stored in cookies, and are automatically authenticated when connecting through Socket.IO.
 
----
+Each ticket maps to a dedicated Socket.IO room, ensuring message isolation, authorization, and clean separation of conversations.
 
-## Architecture
+⸻
 
-### Auth Flow
-1. Agent logs in via HTTP (/agent/login)
-2. Server verifies credentials
-3. Server sets cookie: token=<JWT>
-4. When socket connects, the cookie is sent automatically
-5. Socket middleware verifies JWT once and attaches:
-   - socket.data.userId
-   - socket.data.role
-   - socket.data.name
+Key Features
 
-Socket auth happens once at connect time (not on every event).
+Guest Customers
+	•	Create support tickets without authentication
+	•	Automatically rejoin their ticket using a secure guest cookie
+	•	Send and receive real-time messages
+	•	Load older messages using pagination
+	•	See system events (agent joined, agent left, ticket closed)
+	•	Messaging disabled once ticket is closed
 
----
+Support Agents
+	•	Login via HTTP authentication
+	•	JWT stored securely in cookies
+	•	Socket authentication derived automatically from cookie
+	•	View open and closed tickets
+	•	Join any ticket chat
+	•	Reply to customers in real time
+	•	Close tickets and notify customers instantly
+	•	Automatic redirect back to dashboard after ticket closure
 
-## Tech Stack
-- Node.js + Express
-- Socket.IO
-- JWT
-- cookie-parser
-- MongoDB (for tickets, admin credentials)
+⸻
 
----
+Authentication Design
 
-## Project Checklist (Build Order)
+This project uses a hybrid authentication model:
+	•	HTTP Authentication for agents
+	•	Socket.IO Authentication Middleware for real-time events
 
-### Phase 0: Setup
-- [ ] Init Node project (npm init -y)
-- [ ] Install dependencies
-  - [ ] express
-  - [ ] socket.io
-  - [ ] jsonwebtoken
-  - [ ] cookie-parser
-  - [ ] dotenv
-- [ ] Setup folder structure
-- [ ] Setup .env file
+How it Works
+	1.	Agent logs in via HTTP
+	2.	Server verifies credentials and issues a JWT
+	3.	JWT is stored in an HTTP-only cookie
+	4.	Socket.IO automatically receives the cookie during handshake
+	5.	Socket middleware verifies JWT once and attaches:
+	•	socket.data.userId
+	•	socket.data.role
+	•	socket.data.name
 
----
+Guests do not authenticate but are tracked using a secure guestId cookie.
 
-### Phase 1: Agent Auth (HTTP)
-- [ ] Create agent login page (frontend)
-- [ ] Create POST /agent/login route
-- [ ] Verify credentials (hardcoded or DB)
-- [ ] Generate JWT payload:
-  - [ ] id
-  - [ ] role: "agent"
-  - [ ] name
-- [ ] Set cookie token=<JWT> (httpOnly)
-- [ ] Protect /agent/dashboard via middleware
-- [ ] Logout route (/agent/logout)
+Client never sends role or identity — the server derives it exclusively.
 
----
+⸻
 
-### Phase 2: Socket Authentication Middleware
-- [ ] Create Socket.IO server using same HTTP server
-- [ ] Parse cookie inside socket handshake
-- [ ] Extract JWT from cookie
-- [ ] Verify JWT
-- [ ] Attach user info to socket:
-  - [ ] socket.data.userId
-  - [ ] socket.data.role
-  - [ ] socket.data.name
-- [ ] If no token, set guest mode:
-  - [ ] socket.data.role = "guest"
+Authorization Rules
+	•	Guests can only access their own ticket
+	•	Agents can access any ticket
+	•	Closed tickets block all messaging
+	•	All socket events validate role and ownership server-side
+	•	No trust is placed in client-sent data
 
----
+⸻
 
-### Phase 3: Ticket System
-- [ ] Create ticket model/schema:
-  - [ ] ticketId
-  - [ ] customerId (guestId)
-  - [ ] status: open/closed
-  - [ ] createdAt
-- [ ] Customer event: ticket:create
-  - [ ] Generate ticket
-  - [ ] Store ticket
-  - [ ] Auto-join room: ticket:<id>
-- [ ] Agent event: ticket:list
-  - [ ] Return all open tickets
+Ticket & Chat Architecture
+	•	One ticket = one Socket.IO room
+ticket:<ticketId>
+	•	Messages are broadcast only within the ticket room
+	•	Agents and guests coexist in the same room
+	•	System messages are emitted for lifecycle events
 
----
+⸻
 
-### Phase 4: Authorization Rules
-- [ ] Agent-only event protection:
-  - [ ] ticket:list
-  - [ ] ticket:join
-  - [ ] ticket:close
-- [ ] Ticket ownership checks:
-  - [ ] Customer can only join their own ticket
-  - [ ] Agent can join any ticket
+Message Persistence & Pagination
 
-Never accept role from the client. Role is derived from JWT/cookie on the server.
+All messages are stored in MongoDB and loaded incrementally.
 
----
+Initial Load
+	•	The most recent messages are rendered when the chat page loads
 
-### Phase 5: Chat Messaging (Room Based)
-- [ ] Event: chat:message
-  - [ ] Validate ticket
-  - [ ] Check access rules
-  - [ ] Broadcast to ticket room
-- [ ] Store messages (recommended):
-  - [ ] ticketId
-  - [ ] senderId
-  - [ ] senderRole
-  - [ ] text
-  - [ ] timestamp
+Cursor-Based Pagination
 
----
+Older messages are loaded using a timestamp cursor:
+	•	Client requests messages older than the earliest loaded message
+	•	Server responds with the next batch
+	•	Messages are prepended to the chat window
 
-### Phase 6: Ticket Closing and Archive
-- [ ] Agent event: ticket:close
-- [ ] Update status to closed
-- [ ] Notify customer (emit event)
-- [ ] Prevent messaging on closed tickets
+This avoids page-number pagination and scales efficiently for long conversations.
 
----
+⸻
 
-## Optional Enhancements
-- [ ] Reconnection handling
-- [ ] Typing indicator
-- [ ] Read receipts
-- [ ] Ticket assignment
-- [ ] Admin panel (agent creation)
-- [ ] Rate limit protection
-- [ ] Message validation/profanity filter
+System Events
 
----
+The chat supports system-level events to improve UX:
+	•	Agent joined the chat
+	•	Agent left the chat
+	•	Ticket closed
+	•	Connection lost / reconnected
 
-## Socket Event Design
+System messages are styled separately and stored consistently.
 
-### Customer Events
-- ticket:create
-- chat:message
-- room:leave
+⸻
 
-### Agent Events
-- ticket:list
-- ticket:join
-- ticket:close
-- chat:message
+Tech Stack
+	•	Node.js
+	•	Express
+	•	Socket.IO
+	•	MongoDB + Mongoose
+	•	JWT
+	•	EJS
+	•	Tailwind CSS
 
-Role is never sent from the client. The server assigns it from authentication.
+⸻
 
----
+Why This Project Matters
 
-## Suggested Folder Structure
+This project goes beyond basic Socket.IO demos and focuses on real-world patterns:
+	•	Cookie-based socket authentication
+	•	Role-based authorization inside socket events
+	•	Ticket-scoped rooms
+	•	Message persistence with pagination
+	•	Guest identity without login
+	•	Clean separation of HTTP and WebSocket concerns
+
+It closely mirrors how real support systems are built in production.
+
+⸻
