@@ -1,6 +1,5 @@
 const Message = require('../models/message');
 const Ticket = require('../models/ticket');
-const Agent = require("../models/agent");
 
 module.exports = function registerSockets(io){
     //step 1 
@@ -9,7 +8,7 @@ module.exports = function registerSockets(io){
         //step 2 - client connects to socket
         //step 3- join ticket room (1 ticket = 1 room) so client emits and catch here
 
-        socket.on("ticket:join",async ({ ticketId }) => {
+        socket.on("ticket:join", ({ ticketId }) => {
             if (!ticketId) {
                 console.log("ticketId missing in join");
                 return;
@@ -17,24 +16,11 @@ module.exports = function registerSockets(io){
             const room = `ticket:${ticketId}`;
             if (socket.rooms.has(room)) return; //refreshing page concerns
 
-            
             socket.join(`ticket:${ticketId}`);
-            if(socket.data.role === "agent"){
-                io.to(room).emit("system:message", {
-                    text: `${socket.data.name} joined the chat.`
-                });
-            }
             console.log("joined room", ticketId);
         });
 
-
-        socket.on("chat:message", async ({ ticketId, msg }) => {
-            console.log("CHAT EVENT RECEIVED", {
-                ticketId,
-                msg,
-                role: socket.data.role,
-                guestId: socket.data.guestId
-            });
+        socket.on("chat:message",async ({ticketId,msg})=>{
             if(!msg) return;
 
             const ticket = await Ticket.findById(ticketId);
@@ -58,25 +44,13 @@ module.exports = function registerSockets(io){
             console.log("saved to DB", saved);
 
             //emit after saved
-            io.to(`ticket:${ticketId}`).emit("chat:message", saved);
+            io.to(`ticket:${ticketId}`).emit("chat:message", {
+                ticketId,
+                msg: saved.content,
+                senderRole: saved.senderRole
+            });
 
         });
-
-        //pagination socket evevnt
-        socket.on("messages:loadMore", async ({ ticketId, before }) => {
-        const LIMIT = 25;
-
-        const messages = await Message.find({
-            ticketId,
-            createdAt: { $lt: new Date(before) }
-        })
-        .sort({ createdAt: -1 })
-        .limit(LIMIT);
-
-        socket.emit("messages:older", {
-            messages: messages.reverse()
-        });
-    });
 
         socket.on("ticket:close",async ({ticketId})=>{
             if(socket.data.role!=="agent") return;
@@ -88,21 +62,25 @@ module.exports = function registerSockets(io){
             await ticket.save();
             const room = `ticket:${ticketId}`;
             io.to(room).emit("ticket:closed"); //broadcast
+            io.in(room).socketsLeave(room);
             
             socket.emit("agent:redirect", { url: "/agent/dashboard" });
-            // io.in(room).socketsLeave(room);
 
 
         })
-        socket.on("agent:leaving", ({ ticketId }) => {
-            if (socket.data.role !== "agent") return;
 
-            const room = `ticket:${ticketId}`;
-
-            io.to(room).emit("system:message", {
-                text: "Agent left the chat. Please wait..."
-            });
-        });
+        socket.on("disconnect",()=>{
+            if(socket.data.role === "agent"){
+                socket.rooms.forEach(room => {
+                    if (room.startsWith("ticket:")) {
+                        io.to(room).emit("system:message", {
+                            text: "Agent disconnected. Please wait..."
+                        });
+                }
+            }
+        )
+    }
+    });
 
     });
 }

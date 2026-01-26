@@ -100,8 +100,6 @@
         console.log(ticketId);
         
         const messagesDiv = document.getElementById("messages");
-        // Scroll to bottom on initial render
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
         const chatForm = document.getElementById("chatForm");
         const msgInput = document.getElementById("msgInput");
         
@@ -121,7 +119,6 @@
         //     messagesDiv.scrollTop = messagesDiv.scrollHeight;
         // }
 
-        const currentRole = "<%= currentRole %>";
         function renderMessage(message, mode = "append") {
             const div = document.createElement("div");
 
@@ -165,8 +162,7 @@
         socket.on("chat:message",(data)=>{
             if(data.ticketId !== ticketId)return;
             console.log("received chat message:", data);
-            renderMessage(data, "append");
-            // addMessage(data.msg, data.senderRole=== "guest" ? "me" : "agent");
+            addMessage(data.msg, data.senderRole=== "guest" ? "me" : "agent");
         });
         
         //handle reconnect
@@ -214,12 +210,16 @@
             }
 
             messages.forEach(msg => {
-                renderMessage(msg,"prepend");
+                prependMessage(msg);
             });
 
             oldestMessageTime = messages[0].createdAt;
         });
-
+        function prependMessage(message) {
+            const div = document.createElement("div");
+            div.innerText = message.content;
+            messagesDiv.prepend(div);
+        }
     </script>
 
 </body>

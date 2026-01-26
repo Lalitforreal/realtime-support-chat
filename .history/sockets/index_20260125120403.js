@@ -27,14 +27,7 @@ module.exports = function registerSockets(io){
             console.log("joined room", ticketId);
         });
 
-
-        socket.on("chat:message", async ({ ticketId, msg }) => {
-            console.log("CHAT EVENT RECEIVED", {
-                ticketId,
-                msg,
-                role: socket.data.role,
-                guestId: socket.data.guestId
-            });
+        socket.on("chat:message",async ({ticketId,msg})=>{
             if(!msg) return;
 
             const ticket = await Ticket.findById(ticketId);
@@ -58,13 +51,17 @@ module.exports = function registerSockets(io){
             console.log("saved to DB", saved);
 
             //emit after saved
-            io.to(`ticket:${ticketId}`).emit("chat:message", saved);
+            io.to(`ticket:${ticketId}`).emit("chat:message", {
+                ticketId,
+                msg: saved.content,
+                senderRole: saved.senderRole
+            });
 
         });
 
         //pagination socket evevnt
         socket.on("messages:loadMore", async ({ ticketId, before }) => {
-        const LIMIT = 25;
+        const LIMIT = 3;
 
         const messages = await Message.find({
             ticketId,

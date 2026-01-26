@@ -46,16 +46,12 @@ router.get('/ticket/:ticketId', async function(req,res){
     }
     // res.send("chat khulgayiii");
     // render old messages
-    const LIMIT = 30;
-
     const messages = await messageModel.find({
-        ticketId: req.params.ticketId
-    })
-    .sort({ createdAt: -1 }) // newest first
-    .limit(LIMIT);
+        ticketId : req.params.ticketId
+    }).sort({createdAt : 1}).limit(3); //initial load for pagination
+    messages.reverse();// oldest → newest for UI
 
-    messages.reverse(); // oldest → newest for UI
-        res.render("chat",{ticket,messages, currentRole : "guest",isClosed: ticket.status === "closed",});
-    })
+    res.render("chat",{ticket,messages, currentRole : "guest",isClosed: ticket.status === "closed",});
+})
 
 module.exports = router;

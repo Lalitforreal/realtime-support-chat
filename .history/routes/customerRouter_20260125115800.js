@@ -3,7 +3,6 @@ const router = express.Router();
 const ticketModel = require('../models/ticket');
 const messageModel = require('../models/message');
 const ensureGuest = require("../middlewares/ensureGuest");
-const message = require('../models/message');
 
 
 router.get('/new',async function(req,res){
@@ -46,16 +45,11 @@ router.get('/ticket/:ticketId', async function(req,res){
     }
     // res.send("chat khulgayiii");
     // render old messages
-    const LIMIT = 30;
-
     const messages = await messageModel.find({
-        ticketId: req.params.ticketId
-    })
-    .sort({ createdAt: -1 }) // newest first
-    .limit(LIMIT);
+        ticketId : req.params.ticketId
+    }).sort({createdAt : 1}).limit(3); //initial load for pagination
 
-    messages.reverse(); // oldest → newest for UI
-        res.render("chat",{ticket,messages, currentRole : "guest",isClosed: ticket.status === "closed",});
-    })
+    res.render("chat",{ticket,messages, currentRole : "guest",isClosed: ticket.status === "closed",});
+})
 
 module.exports = router;

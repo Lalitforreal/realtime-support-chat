@@ -64,7 +64,7 @@ module.exports = function registerSockets(io){
 
         //pagination socket evevnt
         socket.on("messages:loadMore", async ({ ticketId, before }) => {
-        const LIMIT = 25;
+        const LIMIT = 3;
 
         const messages = await Message.find({
             ticketId,

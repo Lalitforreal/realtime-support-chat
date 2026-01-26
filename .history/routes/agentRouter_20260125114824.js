@@ -101,16 +101,11 @@ router.get('/ticket/:ticketId',requireAgent,async function(req,res){
 
     if(!ticket) return res.status(404).send("ticket not found");
 
-    const messages = await messageModel.find({ ticketId: ticket._id })
-    .sort({ createdAt: -1 })
-    .limit(20);
+    const messages = await messageModel.find({ticketId : ticket._id})
+    .sort({createdAt : 1}).limit(30); //without .populate(tickedId) just messga with populara the whole object as a ref, now we have boht msg+ticket data
 
-    res.render("agent-chat", {
-    ticket,
-    messages: messages.reverse(),
-    currentRole: "agent",
-    isClosed: ticket.status === "closed"
-    });
+
+    res.render('agent-chat', {ticket, messages, currentRole : "agent",isClosed: ticket.status === "closed",});
 });
 
 

@@ -102,12 +102,13 @@
     <script>
     
     document.addEventListener("DOMContentLoaded",()=>{
-        
-
-        const ticketId = "<%= ticket._id %>";
-        
+        document.addEventListener("DOMContentLoaded", () => {
+    
+    const ticketId = "<%= ticket._id %>";
+    
         const messagesDiv = document.getElementById("messages");
         if (!messagesDiv) return;
+
         // Scroll to bottom on initial render
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
         const chatForm = document.getElementById("chatForm");

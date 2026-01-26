@@ -46,7 +46,7 @@ router.get('/ticket/:ticketId', async function(req,res){
     }
     // res.send("chat khulgayiii");
     // render old messages
-    const LIMIT = 30;
+    const LIMIT = 3;
 
     const messages = await messageModel.find({
         ticketId: req.params.ticketId
